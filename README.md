@@ -7,7 +7,7 @@ This Turborepo starter is maintained by the Turborepo core team.
 Run the following command:
 
 ```sh
-npx create-turbo@latest
+bunx create-turbo@latest
 ```
 
 ## What's inside?
@@ -38,7 +38,7 @@ To build all apps and packages, run the following command:
 
 ```
 cd my-turborepo
-pnpm build
+bun build
 ```
 
 ### Develop
@@ -47,7 +47,7 @@ To develop all apps and packages, run the following command:
 
 ```
 cd my-turborepo
-pnpm dev
+bun dev
 ```
 
 ### Remote Caching
