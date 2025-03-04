@@ -1,5 +1,5 @@
 {
-  "name": "MergedInMainMono",
+  "name": "merged-in-main-mono",
   "private": true,
   "scripts": {
     "build": "turbo run build",

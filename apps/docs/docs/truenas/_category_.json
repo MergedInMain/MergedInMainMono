@@ -1,0 +1,8 @@
+{
+    "label": "TrueNas SCALE",
+    "position": 1,
+    "link": {
+        "type": "generated-index",
+        "description": "TrueNas SCALE is one of the best introductory NAS software available. It can act as both a storage server and provide many services with custom apps and virtual machines. IMHO best server software because I am too lazy to ever switch."
+    }
+}
