@@ -25,4 +25,4 @@ All of the other options aren't really necessary for setting up the initial serv
 Alright, great job on creating your first pool. Hopefully it's big enough to handle everything you want to build on it for the time being...
 ![Congrats](./congrats-gif-50.gif)
 
-Alright,
+Now, let's get to the more boring part, setting up datasets is not difficult and you will likely need to do this multiple times so make sure to pay attention here.
