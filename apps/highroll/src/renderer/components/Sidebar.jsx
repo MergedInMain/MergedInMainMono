@@ -13,6 +13,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: 'compositions', label: 'Team Compositions' },
     { id: 'items', label: 'Item Optimizer' },
     { id: 'augments', label: 'Augment Analysis' },
+    { id: 'capture', label: 'Screen Capture' },
     { id: 'settings', label: 'Settings' }
   ];
 

@@ -13,7 +13,9 @@ export const IPC_CHANNELS = {
     SET_TRANSPARENCY: 'overlay:set-transparency'
   },
   SCREEN: {
-    CAPTURE: 'screen:capture'
+    CAPTURE: 'screen:capture',
+    GET_SOURCES: 'screen:get-sources',
+    CAPTURE_REGION: 'screen:capture-region'
   },
   GAME: {
     STATE_UPDATE: 'game:state-update',

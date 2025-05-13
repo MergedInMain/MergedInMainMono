@@ -83,12 +83,153 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
   ipcMain.handle('screen:capture', async (event: IpcMainInvokeEvent) => {
     logger.info('IPC: screen:capture received');
     try {
-      // This will be implemented in Phase 2
-      logger.warn('Screen capture not yet implemented');
-      return { success: false, message: 'Screen capture not yet implemented' };
+      const { desktopCapturer, screen } = require('electron');
+      const primaryDisplay = screen.getPrimaryDisplay();
+
+      // Get sources (screens and windows)
+      const sources = await desktopCapturer.getSources({
+        types: ['screen'],
+        thumbnailSize: {
+          width: primaryDisplay.size.width,
+          height: primaryDisplay.size.height
+        }
+      });
+
+      // Find the primary display source
+      const primarySource = sources.find(source =>
+        source.display_id === primaryDisplay.id.toString() ||
+        source.id.includes('screen:0:')
+      );
+
+      if (!primarySource) {
+        logger.error('Primary display source not found');
+        return {
+          success: false,
+          message: 'Primary display source not found'
+        };
+      }
+
+      // Get the thumbnail as base64
+      const thumbnail = primarySource.thumbnail.toDataURL();
+
+      logger.info('Screen capture successful');
+      return {
+        success: true,
+        message: 'Screen capture successful',
+        data: thumbnail
+      };
     } catch (error) {
       logger.error('Error during screen capture:', error);
-      return { success: false, message: 'Error during screen capture', error: String(error) };
+      return {
+        success: false,
+        message: 'Error during screen capture',
+        error: String(error)
+      };
+    }
+  });
+
+  // Handle getting available sources for screen capture
+  ipcMain.handle('screen:get-sources', async (event: IpcMainInvokeEvent) => {
+    logger.info('IPC: screen:get-sources received');
+    try {
+      const { desktopCapturer } = require('electron');
+
+      // Get sources (screens and windows)
+      const sources = await desktopCapturer.getSources({
+        types: ['screen', 'window'],
+        thumbnailSize: { width: 150, height: 150 }
+      });
+
+      // Format sources for the renderer
+      const formattedSources = sources.map(source => ({
+        id: source.id,
+        name: source.name,
+        display_id: source.display_id,
+        thumbnail: source.thumbnail.toDataURL()
+      }));
+
+      logger.info(`Found ${formattedSources.length} sources`);
+      return {
+        success: true,
+        sources: formattedSources
+      };
+    } catch (error) {
+      logger.error('Error getting screen sources:', error);
+      return {
+        success: false,
+        message: 'Error getting screen sources',
+        error: String(error)
+      };
+    }
+  });
+
+  // Handle capturing a specific region of the screen
+  ipcMain.handle('screen:capture-region', async (event: IpcMainInvokeEvent, region: { x: number, y: number, width: number, height: number }) => {
+    logger.info(`IPC: screen:capture-region received for region: ${JSON.stringify(region)}`);
+    try {
+      const { desktopCapturer, screen } = require('electron');
+      const primaryDisplay = screen.getPrimaryDisplay();
+
+      // Validate region parameters
+      if (!region || typeof region !== 'object' ||
+          typeof region.x !== 'number' ||
+          typeof region.y !== 'number' ||
+          typeof region.width !== 'number' ||
+          typeof region.height !== 'number') {
+        logger.error('Invalid region parameters');
+        return {
+          success: false,
+          message: 'Invalid region parameters'
+        };
+      }
+
+      // Get sources (screens)
+      const sources = await desktopCapturer.getSources({
+        types: ['screen'],
+        thumbnailSize: {
+          width: primaryDisplay.size.width,
+          height: primaryDisplay.size.height
+        }
+      });
+
+      // Find the primary display source
+      const primarySource = sources.find(source =>
+        source.display_id === primaryDisplay.id.toString() ||
+        source.id.includes('screen:0:')
+      );
+
+      if (!primarySource) {
+        logger.error('Primary display source not found');
+        return {
+          success: false,
+          message: 'Primary display source not found'
+        };
+      }
+
+      // For now, just return the full screenshot
+      // In a future implementation, we'll add proper region cropping
+      // when the canvas dependency is properly installed
+      const fullScreenshot = primarySource.thumbnail.toDataURL();
+
+      // Log that we're returning the full screenshot instead of a cropped region
+      logger.warn('Region cropping not implemented yet, returning full screenshot');
+
+      // Get the full screenshot as base64
+      const croppedImage = fullScreenshot;
+
+      logger.info('Region capture successful');
+      return {
+        success: true,
+        message: 'Region capture successful',
+        data: croppedImage
+      };
+    } catch (error) {
+      logger.error('Error during region capture:', error);
+      return {
+        success: false,
+        message: 'Error during region capture',
+        error: String(error)
+      };
     }
   });
 

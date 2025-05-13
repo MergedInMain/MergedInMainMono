@@ -10,10 +10,12 @@ contextBridge.exposeInMainWorld(
     showOverlay: () => ipcRenderer.send('overlay:show'),
     hideOverlay: () => ipcRenderer.send('overlay:hide'),
     setOverlayTransparency: (opacity) => ipcRenderer.send('overlay:set-transparency', opacity),
-    
+
     // Screen capture
     captureScreen: () => ipcRenderer.invoke('screen:capture'),
-    
+    getSources: () => ipcRenderer.invoke('screen:get-sources'),
+    captureRegion: (region) => ipcRenderer.invoke('screen:capture-region', region),
+
     // Game state
     updateGameState: (gameState) => ipcRenderer.send('game:state-update', gameState),
     onGameStateUpdated: (callback) => ipcRenderer.on('game:state-updated', callback)

@@ -79,6 +79,14 @@ contextBridge.exposeInMainWorld(
       return ipcRenderer.invoke('screen:capture');
     },
 
+    getSources: (): Promise<{ success: boolean; sources?: Array<{ id: string; name: string; display_id: string; thumbnail: string }>; message?: string; error?: string }> => {
+      return ipcRenderer.invoke('screen:get-sources');
+    },
+
+    captureRegion: (region: { x: number; y: number; width: number; height: number }): Promise<{ success: boolean; message: string; data?: string; error?: string }> => {
+      return ipcRenderer.invoke('screen:capture-region', region);
+    },
+
     // Game state
     updateGameState: (gameState: GameState): void => {
       ipcRenderer.send('game:state-update', gameState);
