@@ -2,16 +2,20 @@
   "name": "highroll",
   "version": "0.1.0",
   "private": true,
-  "main": "src/main/main.js",
+  "main": "dist/main.js",
   "scripts": {
     "dev": "electron-forge start",
     "build": "electron-forge package",
     "make": "electron-forge make",
     "lint": "eslint . --max-warnings 0",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "compile": "tsc",
+    "start": "electron-forge start"
   },
   "dependencies": {
+    "electron-log": "^5.1.1",
     "electron-squirrel-startup": "^1.0.0",
+    "electron-store": "^8.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "sqlite3": "^5.1.7",
