@@ -28,6 +28,10 @@
     "web": {
       "cache": false,
       "persistent": true
+    },
+    "highroll": {
+      "cache": false,
+      "persistent": true
     }
   }
 }
