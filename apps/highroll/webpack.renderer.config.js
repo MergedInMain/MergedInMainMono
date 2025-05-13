@@ -23,7 +23,11 @@ module.exports = {
     },
   },
   entry: {
-    index: './src/renderer/index.tsx',
-    overlay: './src/renderer/overlay.js',
+    main_window: './src/renderer/index.tsx',
+    overlay_window: './src/renderer/overlay.js',
+  },
+  output: {
+    filename: '[name]/index.js',
+    publicPath: '/',
   },
 };

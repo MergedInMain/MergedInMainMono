@@ -1,3 +1,4 @@
+
 module.exports = {
   packagerConfig: {
     asar: true,
@@ -30,6 +31,9 @@ module.exports = {
       name: '@electron-forge/plugin-webpack',
       config: {
         mainConfig: './webpack.main.config.js',
+        devServer: {
+          port: 9000,
+        },
         renderer: {
           config: './webpack.renderer.config.js',
           entryPoints: [
@@ -51,4 +55,11 @@ module.exports = {
       },
     },
   ],
+  // Add environment variables for development
+  hooks: {
+    generateAssets: async () => {
+      console.log('Setting NODE_ENV to development');
+      process.env.NODE_ENV = 'development';
+    }
+  }
 };

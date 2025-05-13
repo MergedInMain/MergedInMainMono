@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import ipcService from '../services/ipc-service';
+import StatusIndicator from './StatusIndicator';
 
 /**
  * OverlayApp component for the overlay window
@@ -9,14 +11,16 @@ const OverlayApp = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isClickThrough, setIsClickThrough] = useState(false);
 
+  // State for IPC status
+  const [status, setStatus] = useState('idle');
+  const [statusMessage, setStatusMessage] = useState('');
+
   // Get initial click-through state
   useEffect(() => {
     const getInitialClickThroughState = async () => {
       try {
-        if (window.electron && window.electron.getClickThroughState) {
-          const state = await window.electron.getClickThroughState();
-          setIsClickThrough(state);
-        }
+        const state = await ipcService.getClickThroughState();
+        setIsClickThrough(state);
       } catch (error) {
         console.error('Failed to get click-through state:', error);
       }
@@ -54,9 +58,23 @@ const OverlayApp = () => {
     const newState = !isClickThrough;
     setIsClickThrough(newState);
 
-    if (window.electron && window.electron.setClickThrough) {
-      window.electron.setClickThrough(newState);
-    }
+    // Update status
+    setStatus('sending');
+    setStatusMessage(`Setting click-through to ${newState ? 'enabled' : 'disabled'}`);
+
+    ipcService.setClickThrough(newState);
+
+    // After a short delay, update to success
+    setTimeout(() => {
+      setStatus('success');
+      setStatusMessage(`Click-through ${newState ? 'enabled' : 'disabled'}`);
+
+      // Reset status after 3 seconds
+      setTimeout(() => {
+        setStatus('idle');
+        setStatusMessage('');
+      }, 3000);
+    }, 500);
   };
 
   // Add event listeners for mouse move and up
@@ -132,6 +150,13 @@ const OverlayApp = () => {
           </button>
         </div>
       </div>
+
+      {/* Status indicator */}
+      {(status !== 'idle' || statusMessage) && (
+        <div style={{ marginBottom: '10px' }}>
+          <StatusIndicator status={status} message={statusMessage} />
+        </div>
+      )}
 
       <div>
         <p>This is a placeholder for the overlay content.</p>

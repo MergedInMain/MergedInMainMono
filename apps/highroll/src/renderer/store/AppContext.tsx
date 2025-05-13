@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { GameState, Settings, TeamComp, ScreenPosition } from '../../shared/types';
 import { DEFAULT_SETTINGS } from '../../shared/constants';
+import ipcService from '../services/ipc-service';
 
 // Define the state interface
 interface AppState {
@@ -97,11 +98,11 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
     const loadInitialData = async () => {
       try {
         // Get app info
-        const appInfo = await window.electron.getAppInfo();
+        const appInfo = await ipcService.getAppInfo();
         dispatch({ type: 'SET_APP_INFO', payload: appInfo });
 
         // Get settings
-        const settings = await window.electron.getSettings();
+        const settings = await ipcService.getSettings();
         dispatch({ type: 'SET_SETTINGS', payload: settings as Settings });
       } catch (error) {
         console.error('Error loading initial data:', error);
@@ -115,15 +116,15 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
   // Set up IPC listeners
   useEffect(() => {
     // Listen for game state updates from the main process
-    window.electron.onGameStateUpdated((_, gameState) => {
+    const unsubscribeGameState = ipcService.onGameStateUpdated((gameState) => {
       dispatch({ type: 'SET_GAME_STATE', payload: gameState });
     });
 
     // Listen for settings saved events
-    window.electron.onSettingsSaved((result) => {
+    const unsubscribeSettings = ipcService.onSettingsSaved((result) => {
       if (result.success) {
         // Reload settings after save
-        window.electron.getSettings().then((settings) => {
+        ipcService.getSettings().then((settings) => {
           dispatch({ type: 'SET_SETTINGS', payload: settings as Settings });
         });
       } else {
@@ -133,38 +134,39 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
 
     // Clean up listeners on unmount
     return () => {
-      // No cleanup needed for now as the IPC listeners are managed by Electron
+      unsubscribeGameState();
+      unsubscribeSettings();
     };
   }, []);
 
   // Handle overlay visibility changes
   useEffect(() => {
     if (state.overlayVisible) {
-      window.electron.showOverlay();
+      ipcService.showOverlay();
     } else {
-      window.electron.hideOverlay();
+      ipcService.hideOverlay();
     }
   }, [state.overlayVisible]);
 
   // Handle overlay opacity changes
   useEffect(() => {
-    window.electron.setOverlayTransparency(state.overlayOpacity);
+    ipcService.setOverlayTransparency(state.overlayOpacity);
   }, [state.overlayOpacity]);
 
   // Handle overlay position changes
   useEffect(() => {
-    window.electron.positionOverlay(state.overlayPosition.x, state.overlayPosition.y);
+    ipcService.positionOverlay(state.overlayPosition.x, state.overlayPosition.y);
   }, [state.overlayPosition]);
 
   // Handle overlay size changes
   useEffect(() => {
-    window.electron.resizeOverlay(state.overlaySize.width, state.overlaySize.height);
+    ipcService.resizeOverlay(state.overlaySize.width, state.overlaySize.height);
   }, [state.overlaySize]);
 
   // Handle error reporting
   useEffect(() => {
     if (state.error) {
-      window.electron.reportError(state.error);
+      ipcService.reportError(state.error);
     }
   }, [state.error]);
 

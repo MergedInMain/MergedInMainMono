@@ -1,51 +1,25 @@
 import type { IpcRendererEvent } from 'electron';
+import { GameState } from '../shared/types';
 
 /**
- * Champion interface
+ * Screen source interface
  */
-interface Champion {
+interface ScreenSource {
   id: string;
   name: string;
-  cost: number;
-  stars: number;
-  items?: Item[];
-}
-
-/**
- * Item interface
- */
-interface Item {
-  id: string;
-  name: string;
-}
-
-/**
- * Augment interface
- */
-interface Augment {
-  id: string;
-  name: string;
-  tier: number;
-}
-
-/**
- * Game state interface
- */
-interface GameState {
-  stage: string;
-  health: number;
-  gold: number;
-  level: number;
-  champions?: Champion[];
-  items?: Item[];
-  augments?: Augment[];
-  [key: string]: unknown;
+  display_id: string;
+  thumbnail: string;
 }
 
 /**
  * Type for game state update callback
  */
 type GameStateCallback = (event: IpcRendererEvent, gameState: GameState) => void;
+
+/**
+ * Type for settings saved callback
+ */
+type SettingsSavedCallback = (result: { success: boolean; error?: string }) => void;
 
 declare global {
   interface Window {
@@ -63,6 +37,8 @@ declare global {
 
       // Screen capture
       captureScreen: () => Promise<{ success: boolean; message: string; data?: string }>;
+      getSources: () => Promise<{ success: boolean; sources?: ScreenSource[]; message?: string; error?: string }>;
+      captureRegion: (region: { x: number; y: number; width: number; height: number }) => Promise<{ success: boolean; message: string; data?: string; error?: string }>;
 
       // Game state
       updateGameState: (gameState: GameState) => void;
@@ -72,7 +48,7 @@ declare global {
       getSettings: () => Promise<Record<string, unknown>>;
       saveSettings: (settings: Record<string, unknown>) => void;
       resetSettings: () => Promise<{ success: boolean }>;
-      onSettingsSaved: (callback: (result: { success: boolean; error?: string }) => void) => void;
+      onSettingsSaved: (callback: SettingsSavedCallback) => void;
 
       // App info
       getAppInfo: () => Promise<{ version: string; environment: string }>;

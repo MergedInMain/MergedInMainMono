@@ -1,5 +1,6 @@
 import { BrowserWindow, screen, globalShortcut } from 'electron';
 import * as path from 'path';
+import * as fs from 'fs';
 import { logger } from './logger';
 
 // Keep a global reference of the overlay window
@@ -39,12 +40,75 @@ export function setupOverlay(mainWindow: BrowserWindow): BrowserWindow {
   });
 
   // Load the overlay HTML file
-  if (process.env.NODE_ENV === 'development') {
-    // In development mode, load from webpack dev server
-    overlayWindow.loadURL('http://localhost:9000/overlay_window/index.html');
-  } else {
-    // In production mode, load from file
-    overlayWindow.loadFile(path.join(__dirname, '../renderer/overlay.html'));
+  try {
+    if (process.env.NODE_ENV === 'development') {
+      // In development mode, try to load from webpack dev server
+      const devServerUrl = 'http://localhost:9000/overlay_window';
+      logger.info(`Loading overlay URL: ${devServerUrl}`);
+
+      // First try loading from the webpack dev server
+      overlayWindow.loadURL(devServerUrl)
+        .catch((err) => {
+          // Detailed error logging for webpack dev server issues
+          logger.error('Failed to load overlay from webpack dev server:', err);
+
+          // Analyze the error type to provide more specific debugging information
+          if (err.code === 'ERR_CONNECTION_REFUSED') {
+            logger.error('Overlay: Webpack dev server connection refused. Possible causes:');
+            logger.error('1. Webpack dev server is not running');
+            logger.error('2. Webpack dev server is running on a different port (expected: 9000)');
+            logger.error('3. Firewall is blocking the connection');
+          } else if (err.code === 'ERR_ABORTED') {
+            logger.error('Overlay: Request to webpack dev server was aborted. Possible causes:');
+            logger.error('1. Webpack compilation errors for overlay_window entry point');
+            logger.error('2. Webpack dev server restarting');
+            logger.error('3. Network interruption');
+          } else if (err.code === 'ERR_FAILED') {
+            logger.error('Overlay: Request to webpack dev server failed. Possible causes:');
+            logger.error('1. Incorrect webpack configuration for overlay_window');
+            logger.error('2. Entry points not properly defined');
+            logger.error('3. HTML template issues for overlay window');
+          }
+
+          // Check if the webpack output directory exists and has the expected files for overlay
+          const webpackOutputDir = path.join(__dirname, '../../.webpack/renderer/overlay_window');
+          try {
+            if (fs.existsSync(webpackOutputDir)) {
+              logger.info('Overlay: Webpack output directory exists:', webpackOutputDir);
+              const files = fs.readdirSync(webpackOutputDir);
+              logger.info('Overlay: Files in webpack output directory:', files);
+
+              if (!files.includes('index.html')) {
+                logger.error('Overlay: index.html not found in webpack output directory');
+              }
+              if (!files.includes('index.js')) {
+                logger.error('Overlay: index.js not found in webpack output directory');
+              }
+            } else {
+              logger.error('Overlay: Webpack output directory does not exist:', webpackOutputDir);
+            }
+          } catch (fsErr) {
+            logger.error('Overlay: Error checking webpack output directory:', fsErr);
+          }
+
+          // Fallback to loading from file system if dev server fails
+          const devPath = path.join(__dirname, '../../.webpack/renderer/overlay_window/index.html');
+          logger.info(`Overlay: Attempting fallback: Loading file: ${devPath}`);
+
+          // Check if overlayWindow still exists
+          if (overlayWindow) {
+            return overlayWindow.loadFile(devPath);
+          }
+          return Promise.reject(new Error('Overlay window was closed'));
+        });
+    } else {
+      // In production mode, load from file
+      overlayWindow.loadFile(path.join(__dirname, '../renderer/overlay.html'));
+    }
+  } catch (error) {
+    logger.error('Failed to load overlay HTML file:', error);
+    // Fallback to a simple HTML content
+    overlayWindow.loadURL('data:text/html;charset=utf-8,<html><body style="background-color:transparent;"><h3>HighRoll Overlay</h3><p>Failed to load overlay. Please check the logs.</p></body></html>');
   }
 
   // Hide the overlay by default
