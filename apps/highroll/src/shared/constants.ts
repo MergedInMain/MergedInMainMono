@@ -7,9 +7,13 @@ export const IPC_CHANNELS = {
   // Overlay controls
   OVERLAY_SHOW: 'overlay:show',
   OVERLAY_HIDE: 'overlay:hide',
+  OVERLAY_TOGGLE: 'overlay:toggle',
   OVERLAY_SET_TRANSPARENCY: 'overlay:set-transparency',
   OVERLAY_POSITION: 'overlay:position',
   OVERLAY_RESIZE: 'overlay:resize',
+  OVERLAY_SET_CLICK_THROUGH: 'overlay:set-click-through',
+  OVERLAY_TOGGLE_CLICK_THROUGH: 'overlay:toggle-click-through',
+  OVERLAY_GET_CLICK_THROUGH_STATE: 'overlay:get-click-through-state',
 
   // Screen capture
   SCREEN_CAPTURE: 'screen:capture',

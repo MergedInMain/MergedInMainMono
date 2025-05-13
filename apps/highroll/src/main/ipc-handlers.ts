@@ -1,6 +1,16 @@
 import { ipcMain, BrowserWindow, dialog } from 'electron';
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron';
-import { showOverlay, hideOverlay, setOverlayTransparency, positionOverlay, resizeOverlay } from './overlay';
+import {
+  showOverlay,
+  hideOverlay,
+  toggleOverlay,
+  setOverlayTransparency,
+  positionOverlay,
+  resizeOverlay,
+  setClickThrough,
+  toggleClickThrough,
+  getClickThroughState
+} from './overlay';
 import { logger } from './logger';
 import { settings } from './settings';
 
@@ -64,6 +74,11 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
     hideOverlay();
   });
 
+  ipcMain.on('overlay:toggle', (event: IpcMainEvent) => {
+    logger.info('IPC: overlay:toggle received');
+    toggleOverlay();
+  });
+
   ipcMain.on('overlay:set-transparency', (event: IpcMainEvent, opacity: number) => {
     logger.info(`IPC: overlay:set-transparency received with opacity ${opacity}`);
     setOverlayTransparency(opacity);
@@ -77,6 +92,22 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
   ipcMain.on('overlay:resize', (event: IpcMainEvent, width: number, height: number) => {
     logger.info(`IPC: overlay:resize received with dimensions ${width}x${height}`);
     resizeOverlay(width, height);
+  });
+
+  // Handle click-through functionality
+  ipcMain.on('overlay:set-click-through', (event: IpcMainEvent, enabled: boolean) => {
+    logger.info(`IPC: overlay:set-click-through received with enabled=${enabled}`);
+    setClickThrough(enabled);
+  });
+
+  ipcMain.on('overlay:toggle-click-through', (event: IpcMainEvent) => {
+    logger.info('IPC: overlay:toggle-click-through received');
+    toggleClickThrough();
+  });
+
+  ipcMain.handle('overlay:get-click-through-state', (event: IpcMainInvokeEvent) => {
+    logger.info('IPC: overlay:get-click-through-state received');
+    return getClickThroughState();
   });
 
   // Handle screen capture requests

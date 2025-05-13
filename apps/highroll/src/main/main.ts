@@ -34,7 +34,13 @@ function createWindow(): BrowserWindow {
   });
 
   // Load the index.html of the app
-  mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+  if (process.env.NODE_ENV === 'development') {
+    // In development mode, load from webpack dev server
+    mainWindow.loadURL('http://localhost:9000/main_window/index.html');
+  } else {
+    // In production mode, load from file
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+  }
 
   // Show window when ready to prevent flickering
   mainWindow.once('ready-to-show', () => {

@@ -53,9 +53,13 @@ declare global {
       // Overlay controls
       showOverlay: () => void;
       hideOverlay: () => void;
+      toggleOverlay: () => void;
       setOverlayTransparency: (opacity: number) => void;
       positionOverlay: (x: number, y: number) => void;
       resizeOverlay: (width: number, height: number) => void;
+      setClickThrough: (enabled: boolean) => void;
+      toggleClickThrough: () => void;
+      getClickThroughState: () => Promise<boolean>;
 
       // Screen capture
       captureScreen: () => Promise<{ success: boolean; message: string; data?: string }>;

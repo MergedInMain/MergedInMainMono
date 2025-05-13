@@ -62,6 +62,10 @@ contextBridge.exposeInMainWorld(
       ipcRenderer.send('overlay:hide');
     },
 
+    toggleOverlay: (): void => {
+      ipcRenderer.send('overlay:toggle');
+    },
+
     setOverlayTransparency: (opacity: number): void => {
       ipcRenderer.send('overlay:set-transparency', opacity);
     },
@@ -72,6 +76,18 @@ contextBridge.exposeInMainWorld(
 
     resizeOverlay: (width: number, height: number): void => {
       ipcRenderer.send('overlay:resize', width, height);
+    },
+
+    setClickThrough: (enabled: boolean): void => {
+      ipcRenderer.send('overlay:set-click-through', enabled);
+    },
+
+    toggleClickThrough: (): void => {
+      ipcRenderer.send('overlay:toggle-click-through');
+    },
+
+    getClickThroughState: (): Promise<boolean> => {
+      return ipcRenderer.invoke('overlay:get-click-through-state');
     },
 
     // Screen capture

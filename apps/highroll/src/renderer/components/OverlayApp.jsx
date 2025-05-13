@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 /**
  * OverlayApp component for the overlay window
@@ -7,6 +7,23 @@ const OverlayApp = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isClickThrough, setIsClickThrough] = useState(false);
+
+  // Get initial click-through state
+  useEffect(() => {
+    const getInitialClickThroughState = async () => {
+      try {
+        if (window.electron && window.electron.getClickThroughState) {
+          const state = await window.electron.getClickThroughState();
+          setIsClickThrough(state);
+        }
+      } catch (error) {
+        console.error('Failed to get click-through state:', error);
+      }
+    };
+
+    getInitialClickThroughState();
+  }, []);
 
   // Handle mouse down for dragging
   const handleMouseDown = (e) => {
@@ -32,16 +49,42 @@ const OverlayApp = () => {
     setIsDragging(false);
   };
 
+  // Toggle click-through mode
+  const toggleClickThrough = () => {
+    const newState = !isClickThrough;
+    setIsClickThrough(newState);
+
+    if (window.electron && window.electron.setClickThrough) {
+      window.electron.setClickThrough(newState);
+    }
+  };
+
   // Add event listeners for mouse move and up
-  React.useEffect(() => {
+  useEffect(() => {
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    
+
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isDragging, dragStart]);
+
+  // Keyboard shortcut for toggling overlay (Alt+Shift+O)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Alt+Shift+C for toggling click-through
+      if (e.altKey && e.shiftKey && e.key === 'C') {
+        toggleClickThrough();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isClickThrough]);
 
   return (
     <div
@@ -50,7 +93,7 @@ const OverlayApp = () => {
         left: `${position.x}px`,
         top: `${position.y}px`,
         backgroundColor: 'rgba(30, 30, 30, 0.8)',
-        border: '1px solid #0078d4',
+        border: `1px solid ${isClickThrough ? '#00d084' : '#0078d4'}`,
         borderRadius: '4px',
         padding: '10px',
         width: '300px',
@@ -59,19 +102,42 @@ const OverlayApp = () => {
     >
       <div
         style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           padding: '5px',
-          backgroundColor: '#0078d4',
+          backgroundColor: isClickThrough ? '#00d084' : '#0078d4',
           cursor: 'move',
           marginBottom: '10px'
         }}
-        onMouseDown={handleMouseDown}
       >
-        HighRoll TFT Overlay
+        <div onMouseDown={handleMouseDown}>
+          HighRoll TFT Overlay
+        </div>
+        <div style={{ display: 'flex', gap: '5px' }}>
+          <button
+            onClick={toggleClickThrough}
+            style={{
+              backgroundColor: isClickThrough ? '#008f58' : '#005a9e',
+              border: 'none',
+              color: 'white',
+              padding: '2px 5px',
+              borderRadius: '3px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+            title={isClickThrough ? 'Disable Click-Through (Alt+Shift+C)' : 'Enable Click-Through (Alt+Shift+C)'}
+          >
+            {isClickThrough ? 'Disable Click-Through' : 'Enable Click-Through'}
+          </button>
+        </div>
       </div>
-      
+
       <div>
         <p>This is a placeholder for the overlay content.</p>
         <p>Game state analysis and recommendations will appear here.</p>
+        <p><small>Press Alt+Shift+O to toggle overlay visibility</small></p>
+        <p><small>Press Alt+Shift+C to toggle click-through mode</small></p>
       </div>
     </div>
   );
