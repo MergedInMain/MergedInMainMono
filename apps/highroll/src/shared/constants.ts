@@ -8,13 +8,27 @@ export const IPC_CHANNELS = {
   OVERLAY_SHOW: 'overlay:show',
   OVERLAY_HIDE: 'overlay:hide',
   OVERLAY_SET_TRANSPARENCY: 'overlay:set-transparency',
-  
+  OVERLAY_POSITION: 'overlay:position',
+  OVERLAY_RESIZE: 'overlay:resize',
+
   // Screen capture
   SCREEN_CAPTURE: 'screen:capture',
-  
+
   // Game state
   GAME_STATE_UPDATE: 'game:state-update',
   GAME_STATE_UPDATED: 'game:state-updated',
+
+  // Settings
+  SETTINGS_GET: 'settings:get',
+  SETTINGS_SAVE: 'settings:save',
+  SETTINGS_RESET: 'settings:reset',
+  SETTINGS_SAVED: 'settings:saved',
+
+  // App info
+  APP_INFO: 'app:info',
+
+  // Error reporting
+  ERROR_REPORT: 'error:report',
 };
 
 // Default settings
@@ -23,14 +37,20 @@ export const DEFAULT_SETTINGS = {
     opacity: 0.8,
     position: { x: 0, y: 0 },
     visible: false,
+    alwaysOnTop: true,
   },
   application: {
     launchOnStartup: false,
     minimizeToTray: true,
+    checkForUpdates: true,
   },
   data: {
     source: 'combined',
     refreshFrequency: 'daily',
+  },
+  developer: {
+    enableDevTools: process.env.NODE_ENV === 'development',
+    logLevel: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
   },
 };
 

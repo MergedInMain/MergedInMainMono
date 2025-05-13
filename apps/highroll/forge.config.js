@@ -38,7 +38,7 @@ module.exports = {
               js: './src/renderer/index.tsx',
               name: 'main_window',
               preload: {
-                js: './src/main/preload.js',
+                js: './src/main/preload.ts',
               },
             },
             {
