@@ -30,6 +30,7 @@ node_modules/
 # Electron-forge output
 out/
 dist/
+.webpack/
 
 # Local data cache
 data/cache/
