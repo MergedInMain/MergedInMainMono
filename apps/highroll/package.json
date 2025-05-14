@@ -13,7 +13,8 @@
     "start": "electron-forge start",
     "debug": "cross-env NODE_ENV=development ELECTRON_ENABLE_LOGGING=true electron-forge start",
     "webpack-debug": "node webpack-debug.js",
-    "dev-verbose": "cross-env NODE_ENV=development ELECTRON_ENABLE_LOGGING=true DEBUG=electron-forge* electron-forge start"
+    "dev-verbose": "cross-env NODE_ENV=development ELECTRON_ENABLE_LOGGING=true DEBUG=electron-forge* electron-forge start",
+    "test-overlay": "electron test-overlay.js"
   },
   "dependencies": {
     "electron-log": "^5.4.0",
@@ -42,12 +43,18 @@
     "@types/uuid": "^10.0.0",
     "@vercel/webpack-asset-relocator-loader": "^1.7.3",
     "babel-loader": "^10.0.0",
+    "buffer": "^6.0.3",
     "cross-env": "^7.0.3",
+    "crypto-browserify": "^3.12.1",
     "css-loader": "^7.1.2",
     "electron": "^30.0.0",
     "eslint": "^9.26.0",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
     "style-loader": "^4.0.0",
     "ts-loader": "^9.5.2",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "util": "^0.12.5"
   }
 }
