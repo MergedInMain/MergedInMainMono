@@ -1,0 +1,226 @@
+{
+  "compositions": [
+    {
+      "id": "syndicate-twisted-fate-braum",
+      "name": "Syndicate Twisted Fate & Braum",
+      "type": "Syndicate",
+      "stats": {
+        "playRate": 0.27,
+        "averagePlacement": 4.21,
+        "top4Percentage": 57.2,
+        "winPercentage": 8.83
+      },
+      "playstyle": {
+        "type": "Level 6 Reroll",
+        "description": "Consistent"
+      },
+      "units": [
+        {
+          "name": "Twisted Fate",
+          "starLevel": 3,
+          "isCore": true,
+          "items": [
+            {
+              "name": "Guinsoo's Rageblade",
+              "playRate": 91.1,
+              "averagePlacement": 4.21,
+              "placementDelta": -0.07
+            },
+            {
+              "name": "Hextech Gunblade",
+              "playRate": 73.8,
+              "averagePlacement": 4.10,
+              "placementDelta": -0.43
+            },
+            {
+              "name": "Archangel's Staff",
+              "playRate": 58.8,
+              "averagePlacement": 4.17,
+              "placementDelta": -0.12
+            }
+          ],
+          "playRate": 100,
+          "averagePlacement": 4.22
+        },
+        {
+          "name": "Braum",
+          "starLevel": 3,
+          "isCore": true,
+          "items": [
+            {
+              "name": "Gargoyle Stoneplate",
+              "playRate": 50.1,
+              "averagePlacement": 4.03,
+              "placementDelta": -0.40
+            },
+            {
+              "name": "Warmog's Armor",
+              "playRate": 42.0,
+              "averagePlacement": 4.05,
+              "placementDelta": -0.31
+            },
+            {
+              "name": "Sunfire Cape",
+              "playRate": 36.2,
+              "averagePlacement": 4.19,
+              "placementDelta": -0.07
+            }
+          ],
+          "playRate": 100,
+          "averagePlacement": 4.23
+        },
+        {
+          "name": "Miss Fortune",
+          "starLevel": 2,
+          "isCore": true,
+          "items": [
+            {
+              "name": "Infinity Edge",
+              "playRate": 29.4,
+              "averagePlacement": 3.85,
+              "placementDelta": -0.31
+            },
+            {
+              "name": "Spear of Shojin",
+              "playRate": 25.1,
+              "averagePlacement": 3.92,
+              "placementDelta": -0.20
+            },
+            {
+              "name": "Last Whisper",
+              "playRate": 14.6,
+              "averagePlacement": 3.82,
+              "placementDelta": -0.30
+            }
+          ],
+          "playRate": 94.3,
+          "averagePlacement": 4.07
+        }
+      ],
+      "traits": [
+        {
+          "name": "Syndicate",
+          "activeLevel": 5,
+          "totalLevel": 5,
+          "playRate": 89.6,
+          "averagePlacement": 4.12
+        },
+        {
+          "name": "Bruiser",
+          "activeLevel": 2,
+          "totalLevel": 2,
+          "playRate": 92.8,
+          "averagePlacement": 4.17
+        },
+        {
+          "name": "Trickshot",
+          "activeLevel": 2,
+          "totalLevel": 2,
+          "playRate": 91.5,
+          "averagePlacement": 4.17
+        }
+      ],
+      "lastUpdated": "2023-11-15T12:00:00.000Z",
+      "teamBuilderUrl": "https://tactics.tools/team-builder/XCXAJVbBNWsCUXaYfZ"
+    },
+    {
+      "id": "amp-annie-neeko",
+      "name": "A.M.P. Annie & Neeko",
+      "type": "A.M.P.",
+      "stats": {
+        "playRate": 0.45,
+        "averagePlacement": 4.22,
+        "top4Percentage": 55.1,
+        "winPercentage": 16.0
+      },
+      "playstyle": {
+        "type": "Fast Level 8",
+        "description": "High Win %"
+      },
+      "units": [
+        {
+          "name": "Annie",
+          "starLevel": 2,
+          "isCore": true,
+          "items": [
+            {
+              "name": "Jeweled Gauntlet",
+              "playRate": 65.3,
+              "averagePlacement": 4.15,
+              "placementDelta": -0.25
+            },
+            {
+              "name": "Archangel's Staff",
+              "playRate": 58.7,
+              "averagePlacement": 4.08,
+              "placementDelta": -0.32
+            },
+            {
+              "name": "Hextech Gunblade",
+              "playRate": 45.2,
+              "averagePlacement": 4.01,
+              "placementDelta": -0.39
+            }
+          ],
+          "playRate": 100,
+          "averagePlacement": 4.40
+        },
+        {
+          "name": "Neeko",
+          "starLevel": 2,
+          "isCore": true,
+          "items": [
+            {
+              "name": "Gargoyle Stoneplate",
+              "playRate": 48.5,
+              "averagePlacement": 4.12,
+              "placementDelta": -0.28
+            },
+            {
+              "name": "Warmog's Armor",
+              "playRate": 40.8,
+              "averagePlacement": 4.05,
+              "placementDelta": -0.35
+            },
+            {
+              "name": "Bramble Vest",
+              "playRate": 35.1,
+              "averagePlacement": 4.18,
+              "placementDelta": -0.22
+            }
+          ],
+          "playRate": 100,
+          "averagePlacement": 4.40
+        }
+      ],
+      "traits": [
+        {
+          "name": "A.M.P.",
+          "activeLevel": 3,
+          "totalLevel": 3,
+          "playRate": 100,
+          "averagePlacement": 4.22
+        },
+        {
+          "name": "Bastion",
+          "activeLevel": 2,
+          "totalLevel": 2,
+          "playRate": 85.3,
+          "averagePlacement": 4.18
+        },
+        {
+          "name": "Dryad",
+          "activeLevel": 2,
+          "totalLevel": 2,
+          "playRate": 78.9,
+          "averagePlacement": 4.25
+        }
+      ],
+      "lastUpdated": "2023-11-15T12:00:00.000Z",
+      "teamBuilderUrl": "https://tactics.tools/team-builder/XCmAGVnBOWzCTX4DtY"
+    }
+  ],
+  "timestamp": "2023-11-15T12:00:00.000Z",
+  "patchVersion": "13.23",
+  "success": true
+}
