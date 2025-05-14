@@ -21,6 +21,16 @@ module.exports = {
       '@services': path.resolve(__dirname, 'src/renderer/services'),
       '@store': path.resolve(__dirname, 'src/renderer/store'),
     },
+    // Add fallbacks for Node.js core modules
+    fallback: {
+      "path": require.resolve("path-browserify"),
+      "fs": false,
+      "util": require.resolve("util/"),
+      "stream": require.resolve("stream-browserify"),
+      "buffer": require.resolve("buffer/"),
+      "crypto": require.resolve("crypto-browserify"),
+      "process": require.resolve("process/browser"),
+    }
   },
   entry: {
     main_window: './src/renderer/index.tsx',
@@ -30,4 +40,11 @@ module.exports = {
     filename: '[name]/index.js',
     publicPath: '/',
   },
+  plugins: [
+    // Provide polyfills
+    new (require('webpack').ProvidePlugin)({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
+    }),
+  ],
 };
