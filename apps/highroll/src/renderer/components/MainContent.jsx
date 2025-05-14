@@ -2,6 +2,9 @@ import React from 'react';
 import Dashboard from './Dashboard';
 import Settings from './Settings';
 import ScreenCapture from './ScreenCapture';
+import DataFetchingTest from './DataFetchingTest';
+import DataTransformationTest from './DataTransformationTest';
+import CacheManagementTest from './CacheManagementTest';
 
 /**
  * Main content area that displays different tabs based on selection
@@ -22,6 +25,12 @@ const MainContent = ({ activeTab, overlayOpacity, updateOverlayOpacity }) => {
         return <div className="card"><h2>Item Optimizer</h2><p>This feature will be implemented in Phase 3.</p></div>;
       case 'augments':
         return <div className="card"><h2>Augment Analysis</h2><p>This feature will be implemented in Phase 3.</p></div>;
+      case 'data':
+        return <DataFetchingTest />;
+      case 'transform':
+        return <DataTransformationTest />;
+      case 'cache':
+        return <CacheManagementTest />;
       case 'capture':
         return <ScreenCapture />;
       case 'settings':

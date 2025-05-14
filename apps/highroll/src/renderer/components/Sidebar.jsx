@@ -13,6 +13,9 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: 'compositions', label: 'Team Compositions' },
     { id: 'items', label: 'Item Optimizer' },
     { id: 'augments', label: 'Augment Analysis' },
+    { id: 'data', label: 'Data Fetching' },
+    { id: 'transform', label: 'Data Transformation' },
+    { id: 'cache', label: 'Data Cache' },
     { id: 'capture', label: 'Screen Capture' },
     { id: 'settings', label: 'Settings' }
   ];
