@@ -1,22 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './components/App';
-import { AppContextProvider } from './store/AppContext';
-import './styles.css';
+import { Provider } from 'react-redux';
+import { store } from './store';
+import App from './App';
+import './index.css';
 
-// Create root and render the App component
-const rootElement = document.getElementById('root');
-
-if (!rootElement) {
-  throw new Error('Root element not found');
-}
-
-const root = ReactDOM.createRoot(rootElement);
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
 
 root.render(
   <React.StrictMode>
-    <AppContextProvider>
+    <Provider store={store}>
       <App />
-    </AppContextProvider>
+    </Provider>
   </React.StrictMode>
 );

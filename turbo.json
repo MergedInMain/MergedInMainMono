@@ -31,7 +31,22 @@
     },
     "highroll": {
       "cache": false,
+      "persistent": true,
+      "dependsOn": ["tft-composition-scraper#dev"]
+    },
+    "tft-composition-scraper": {
+      "cache": false,
       "persistent": true
+    }
+  },
+  "pipeline": {
+    "dev:highroll": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["tft-composition-scraper#dev"]
+    },
+    "build:highroll": {
+      "dependsOn": ["^build", "tft-composition-scraper#build"]
     }
   }
 }

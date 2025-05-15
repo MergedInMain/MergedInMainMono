@@ -1,558 +1,318 @@
-/**
- * Data API Service
- *
- * Provides a unified interface for fetching and caching data from external APIs.
- * Handles data transformation, validation, and caching.
- */
-
-import { TeamComp, Item, Augment } from '../../shared/types';
-import { REFRESH_INTERVALS } from '../../shared/constants';
-import dataFetchingService, { DataSource, FetchOptions } from './data-fetching-service';
-import dataTransformationService from './data-transformation-service';
-import cacheManagementService, { CacheOptions } from './cache-management-service';
-import {
-  TransformationOptions,
-  TeamCompModel,
-  ItemModel,
-  AugmentModel
-} from '../../shared/data-models';
-
-/**
- * Service for fetching and caching data from external APIs
- */
-class DataApiService {
-  private lastRefresh = 0;
-  private cachedTeamComps: TeamComp[] = [];
-  private cachedItems: Item[] = [];
-  private cachedAugments: Augment[] = [];
-  private currentPatch?: string;
-  private dataSource: DataSource = DataSource.COMBINED;
-  private isInitialized = false;
-
-  /**
-   * Initialize the data API service
-   * @returns Promise that resolves when the service is initialized
-   */
-  public async initialize(): Promise<void> {
-    if (this.isInitialized) {
-      return;
-    }
-
-    try {
-      // Initialize the cache management service
-      await cacheManagementService.initialize();
-
-      // Get the latest cached patch
-      const latestPatch = await cacheManagementService.getLatestCachedPatch();
-      if (latestPatch) {
-        this.currentPatch = latestPatch;
-      }
-
-      this.isInitialized = true;
-      console.log('Data API service initialized successfully');
-    } catch (error) {
-      console.error('Error initializing data API service:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Set the data source
-   * @param source Data source
-   */
-  public setDataSource(source: DataSource): void {
-    this.dataSource = source;
-  }
-
-  /**
-   * Set the current patch
-   * @param patch Patch version
-   */
-  public setCurrentPatch(patch: string): void {
-    this.currentPatch = patch;
-  }
-
-  /**
-   * Get the current patch
-   * @returns Current patch version
-   */
-  public getCurrentPatch(): string | undefined {
-    return this.currentPatch;
-  }
-
-  /**
-   * Fetch team compositions from external APIs or cache
-   * @param options Fetch options
-   * @param transformOptions Transformation options
-   * @returns Array of team compositions
-   */
-  public async getTeamComps(
-    options?: Partial<FetchOptions>,
-    transformOptions?: Partial<TransformationOptions>
-  ): Promise<TeamComp[]> {
-    await this.ensureInitialized();
-
-    const fetchOptions: FetchOptions = {
-      source: options?.source || this.dataSource,
-      patch: options?.patch || this.currentPatch,
-      forceRefresh: options?.forceRefresh
-    };
-
-    // Check if we can use cached data
-    if (!fetchOptions.forceRefresh) {
-      const cacheOptions: CacheOptions = {
-        source: fetchOptions.source,
-        patch: fetchOptions.patch,
-        maxAge: REFRESH_INTERVALS.DAILY
-      };
-
-      const isCacheValid = await cacheManagementService.isCacheValid(cacheOptions);
-
-      if (isCacheValid) {
-        const cachedData = await cacheManagementService.getTeamComps(cacheOptions);
-
-        if (cachedData) {
-          this.cachedTeamComps = cachedData.data;
-          this.lastRefresh = cachedData.metadata.timestamp;
-
-          if (!this.currentPatch && cachedData.metadata.patch) {
-            this.currentPatch = cachedData.metadata.patch;
-          }
-
-          return this.cachedTeamComps;
-        }
-      }
-    }
-
-    try {
-      // Fetch team compositions from the data fetching service
-      const result = await dataFetchingService.fetchTeamComps(fetchOptions);
-
-      // Update current patch if not specified
-      if (!this.currentPatch && result.patch) {
-        this.currentPatch = result.patch;
-      }
-
-      // Transform the data based on the source
-      let transformedModel: TeamCompModel | null = null;
-
-      if (result.data.length > 0) {
-        const mergedTransformOptions = {
-          source: result.source,
-          ...transformOptions
-        };
-
-        // Apply appropriate transformation based on data source
-        if (result.source === DataSource.META_TFT && 'comps' in result.data[0]) {
-          // Transform Meta TFT data
-          const metaTftData = {
-            comps: result.data,
-            patch: result.patch || '',
-            updatedAt: new Date(result.timestamp).toISOString()
-          };
-          transformedModel = dataTransformationService.transformMetaTftTeamComps(
-            metaTftData,
-            mergedTransformOptions
-          );
-        } else if (result.source === DataSource.TACTICS_TOOLS && 'champions' in result.data[0]) {
-          // Transform Tactics.Tools data
-          const tacticsToolsData = {
-            comps: result.data,
-            patch: result.patch || '',
-            updatedAt: new Date(result.timestamp).toISOString()
-          };
-          transformedModel = dataTransformationService.transformTacticsToolsTeamComps(
-            tacticsToolsData,
-            mergedTransformOptions
-          );
-        } else {
-          // Data is already in the correct format
-          transformedModel = {
-            data: result.data,
-            metadata: {
-              source: result.source,
-              timestamp: result.timestamp,
-              patch: result.patch,
-              version: '1.0.0'
-            }
-          };
-        }
-
-        if (transformedModel) {
-          // Cache the transformed results
-          await cacheManagementService.storeTeamComps(transformedModel);
-
-          // Update in-memory cache
-          this.cachedTeamComps = transformedModel.data;
-          this.lastRefresh = result.timestamp;
-        }
-      }
-
-      return this.cachedTeamComps;
-    } catch (error) {
-      console.error('Error fetching team compositions:', error);
-
-      // Try to get data from cache as fallback
-      try {
-        const cachedData = await cacheManagementService.getTeamComps({
-          source: fetchOptions.source,
-          patch: fetchOptions.patch
-        });
-
-        if (cachedData) {
-          this.cachedTeamComps = cachedData.data;
-          return this.cachedTeamComps;
-        }
-      } catch (cacheError) {
-        console.error('Error fetching from cache:', cacheError);
-      }
-
-      return this.cachedTeamComps;
-    }
-  }
-
-  /**
-   * Fetch items from external APIs or cache
-   * @param options Fetch options
-   * @param transformOptions Transformation options
-   * @returns Array of items
-   */
-  public async getItems(
-    options?: Partial<FetchOptions>,
-    transformOptions?: Partial<TransformationOptions>
-  ): Promise<Item[]> {
-    await this.ensureInitialized();
-
-    const fetchOptions: FetchOptions = {
-      source: options?.source || this.dataSource,
-      patch: options?.patch || this.currentPatch,
-      forceRefresh: options?.forceRefresh
-    };
-
-    // Check if we can use cached data
-    if (!fetchOptions.forceRefresh) {
-      const cacheOptions: CacheOptions = {
-        source: fetchOptions.source,
-        patch: fetchOptions.patch,
-        maxAge: REFRESH_INTERVALS.DAILY
-      };
-
-      const isCacheValid = await cacheManagementService.isCacheValid(cacheOptions);
-
-      if (isCacheValid) {
-        const cachedData = await cacheManagementService.getItems(cacheOptions);
-
-        if (cachedData) {
-          this.cachedItems = cachedData.data;
-          this.lastRefresh = cachedData.metadata.timestamp;
-
-          if (!this.currentPatch && cachedData.metadata.patch) {
-            this.currentPatch = cachedData.metadata.patch;
-          }
-
-          return this.cachedItems;
-        }
-      }
-    }
-
-    try {
-      // Fetch items from the data fetching service
-      const result = await dataFetchingService.fetchItems(fetchOptions);
-
-      // Transform the data based on the source
-      let transformedModel: ItemModel | null = null;
-
-      if (result.data.length > 0) {
-        const mergedTransformOptions = {
-          source: result.source,
-          ...transformOptions
-        };
-
-        // Apply appropriate transformation based on data source
-        if (result.source === DataSource.META_TFT) {
-          // Transform Meta TFT data
-          const metaTftData = {
-            items: result.data,
-            patch: result.patch || '',
-            updatedAt: new Date(result.timestamp).toISOString()
-          };
-          transformedModel = dataTransformationService.transformMetaTftItems(
-            metaTftData,
-            mergedTransformOptions
-          );
-        } else if (result.source === DataSource.TACTICS_TOOLS) {
-          // Transform Tactics.Tools data
-          const tacticsToolsData = {
-            items: result.data,
-            patch: result.patch || '',
-            updatedAt: new Date(result.timestamp).toISOString()
-          };
-          transformedModel = dataTransformationService.transformTacticsToolsItems(
-            tacticsToolsData,
-            mergedTransformOptions
-          );
-        } else {
-          // Data is already in the correct format
-          transformedModel = {
-            data: result.data,
-            metadata: {
-              source: result.source,
-              timestamp: result.timestamp,
-              patch: result.patch,
-              version: '1.0.0'
-            }
-          };
-        }
-
-        if (transformedModel) {
-          // Cache the transformed results
-          await cacheManagementService.storeItems(transformedModel);
-
-          // Update in-memory cache
-          this.cachedItems = transformedModel.data;
-          this.lastRefresh = result.timestamp;
-        }
-      }
-
-      return this.cachedItems;
-    } catch (error) {
-      console.error('Error fetching items:', error);
-
-      // Try to get data from cache as fallback
-      try {
-        const cachedData = await cacheManagementService.getItems({
-          source: fetchOptions.source,
-          patch: fetchOptions.patch
-        });
-
-        if (cachedData) {
-          this.cachedItems = cachedData.data;
-          return this.cachedItems;
-        }
-      } catch (cacheError) {
-        console.error('Error fetching from cache:', cacheError);
-      }
-
-      return this.cachedItems;
-    }
-  }
-
-  /**
-   * Fetch augments from external APIs or cache
-   * @param options Fetch options
-   * @param transformOptions Transformation options
-   * @returns Array of augments
-   */
-  public async getAugments(
-    options?: Partial<FetchOptions>,
-    transformOptions?: Partial<TransformationOptions>
-  ): Promise<Augment[]> {
-    await this.ensureInitialized();
-
-    const fetchOptions: FetchOptions = {
-      source: options?.source || this.dataSource,
-      patch: options?.patch || this.currentPatch,
-      forceRefresh: options?.forceRefresh
-    };
-
-    // Check if we can use cached data
-    if (!fetchOptions.forceRefresh) {
-      const cacheOptions: CacheOptions = {
-        source: fetchOptions.source,
-        patch: fetchOptions.patch,
-        maxAge: REFRESH_INTERVALS.DAILY
-      };
-
-      const isCacheValid = await cacheManagementService.isCacheValid(cacheOptions);
-
-      if (isCacheValid) {
-        const cachedData = await cacheManagementService.getAugments(cacheOptions);
-
-        if (cachedData) {
-          this.cachedAugments = cachedData.data;
-          this.lastRefresh = cachedData.metadata.timestamp;
-
-          if (!this.currentPatch && cachedData.metadata.patch) {
-            this.currentPatch = cachedData.metadata.patch;
-          }
-
-          return this.cachedAugments;
-        }
-      }
-    }
-
-    try {
-      // Fetch augments from the data fetching service
-      const result = await dataFetchingService.fetchAugments(fetchOptions);
-
-      // Transform the data based on the source
-      let transformedModel: AugmentModel | null = null;
-
-      if (result.data.length > 0) {
-        const mergedTransformOptions = {
-          source: result.source,
-          ...transformOptions
-        };
-
-        // Apply appropriate transformation based on data source
-        if (result.source === DataSource.META_TFT) {
-          // Transform Meta TFT data
-          const metaTftData = {
-            augments: result.data,
-            patch: result.patch || '',
-            updatedAt: new Date(result.timestamp).toISOString()
-          };
-          transformedModel = dataTransformationService.transformMetaTftAugments(
-            metaTftData,
-            mergedTransformOptions
-          );
-        } else if (result.source === DataSource.TACTICS_TOOLS) {
-          // Transform Tactics.Tools data
-          const tacticsToolsData = {
-            augments: result.data,
-            patch: result.patch || '',
-            updatedAt: new Date(result.timestamp).toISOString()
-          };
-          transformedModel = dataTransformationService.transformTacticsToolsAugments(
-            tacticsToolsData,
-            mergedTransformOptions
-          );
-        } else {
-          // Data is already in the correct format
-          transformedModel = {
-            data: result.data,
-            metadata: {
-              source: result.source,
-              timestamp: result.timestamp,
-              patch: result.patch,
-              version: '1.0.0'
-            }
-          };
-        }
-
-        if (transformedModel) {
-          // Cache the transformed results
-          await cacheManagementService.storeAugments(transformedModel);
-
-          // Update in-memory cache
-          this.cachedAugments = transformedModel.data;
-          this.lastRefresh = result.timestamp;
-        }
-      }
-
-      return this.cachedAugments;
-    } catch (error) {
-      console.error('Error fetching augments:', error);
-
-      // Try to get data from cache as fallback
-      try {
-        const cachedData = await cacheManagementService.getAugments({
-          source: fetchOptions.source,
-          patch: fetchOptions.patch
-        });
-
-        if (cachedData) {
-          this.cachedAugments = cachedData.data;
-          return this.cachedAugments;
-        }
-      } catch (cacheError) {
-        console.error('Error fetching from cache:', cacheError);
-      }
-
-      return this.cachedAugments;
-    }
-  }
-
-  /**
-   * Force refresh all cached data
-   * @param options Fetch options
-   * @param transformOptions Transformation options
-   */
-  public async refreshData(
-    options?: Partial<FetchOptions>,
-    transformOptions?: Partial<TransformationOptions>
-  ): Promise<void> {
-    await this.ensureInitialized();
-
-    try {
-      const fetchOptions: FetchOptions = {
-        source: options?.source || this.dataSource,
-        patch: options?.patch || this.currentPatch,
-        forceRefresh: true
-      };
-
-      await Promise.all([
-        this.getTeamComps(fetchOptions, transformOptions),
-        this.getItems(fetchOptions, transformOptions),
-        this.getAugments(fetchOptions, transformOptions),
-      ]);
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-    }
-  }
-
-  /**
-   * Get cache status
-   * @param patch Patch version
-   * @returns Promise that resolves with the cache status
-   */
-  public async getCacheStatus(patch?: string): Promise<any> {
-    await this.ensureInitialized();
-    return cacheManagementService.getCacheStatus(patch);
-  }
-
-  /**
-   * Clear all cached data
-   * @returns Promise that resolves when the cache is cleared
-   */
-  public async clearCache(): Promise<void> {
-    await this.ensureInitialized();
-    await cacheManagementService.clearCache();
-
-    // Clear in-memory cache
-    this.cachedTeamComps = [];
-    this.cachedItems = [];
-    this.cachedAugments = [];
-    this.lastRefresh = 0;
-  }
-
-  /**
-   * Clear cached data for a specific patch
-   * @param patch Patch version
-   * @returns Promise that resolves when the cache is cleared
-   */
-  public async clearPatchCache(patch: string): Promise<void> {
-    await this.ensureInitialized();
-    await cacheManagementService.clearPatchCache(patch);
-
-    // Clear in-memory cache if it's for the current patch
-    if (this.currentPatch === patch) {
-      this.cachedTeamComps = [];
-      this.cachedItems = [];
-      this.cachedAugments = [];
-      this.lastRefresh = 0;
-    }
-  }
-
-  /**
-   * Check if offline data is available
-   * @param patch Patch version
-   * @returns Promise that resolves with a boolean indicating if offline data is available
-   */
-  public async isOfflineDataAvailable(patch?: string): Promise<boolean> {
-    await this.ensureInitialized();
-    return cacheManagementService.isOfflineDataAvailable(patch);
-  }
-
-  /**
-   * Ensure the service is initialized
-   * @returns Promise that resolves when the service is initialized
-   */
-  private async ensureInitialized(): Promise<void> {
-    if (!this.isInitialized) {
-      await this.initialize();
-    }
-  }
+import { API_ENDPOINTS, STORAGE_KEYS } from '../../shared/constants';
+import { TeamComp, ApiResponse, Item, Augment, Unit } from '../../shared/types';
+import Database from 'better-sqlite3';
+import * as path from 'path';
+import * as fs from 'fs';
+import * as os from 'os';
+
+// Initialize database
+const dbPath = path.join(os.homedir(), '.tft-overlay', 'data.db');
+let db: Database.Database | null = null;
+
+// Ensure the directory exists
+if (!fs.existsSync(path.dirname(dbPath))) {
+  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 }
 
-export default new DataApiService();
+// Initialize the database
+const initDatabase = () => {
+  if (!db) {
+    db = new Database(dbPath);
+
+    // Create tables if they don't exist
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS team_comps (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        tier TEXT,
+        data TEXT,
+        updated_at INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS items (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        type TEXT,
+        data TEXT,
+        updated_at INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS augments (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        tier TEXT,
+        data TEXT,
+        updated_at INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS meta_data (
+        key TEXT PRIMARY KEY,
+        value TEXT,
+        updated_at INTEGER
+      );
+    `);
+  }
+
+  return db;
+};
+
+// Fetch team compositions from API
+export const fetchTeamComps = async (): Promise<ApiResponse<TeamComp[]>> => {
+  try {
+    // Check if we need to refresh the data
+    const lastUpdate = localStorage.getItem(STORAGE_KEYS.LAST_UPDATE);
+    const now = Date.now();
+
+    // If data is fresh (less than 24 hours old), use cached data
+    if (lastUpdate && now - parseInt(lastUpdate, 10) < 24 * 60 * 60 * 1000) {
+      const cachedData = await getTeamCompsFromCache();
+      if (cachedData && cachedData.length > 0) {
+        return { success: true, data: cachedData };
+      }
+    }
+
+    // Fetch fresh data from API
+    const response = await fetch(`${API_ENDPOINTS.META_TFT}/comps`);
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Transform API data to our format
+    const teamComps: TeamComp[] = data.map((comp: any) => ({
+      id: comp.id,
+      name: comp.name,
+      tier: comp.tier,
+      units: comp.units,
+      traits: comp.traits,
+      augments: comp.augments,
+      items: comp.items,
+      placement: comp.avgPlacement,
+      winRate: comp.winRate,
+      playRate: comp.playRate,
+      difficulty: comp.difficulty,
+    }));
+
+    // Cache the data
+    await cacheTeamComps(teamComps);
+
+    // Update last update timestamp
+    localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, now.toString());
+
+    return { success: true, data: teamComps };
+  } catch (error) {
+    console.error('Error fetching team comps:', error);
+
+    // Try to get data from cache as fallback
+    const cachedData = await getTeamCompsFromCache();
+    if (cachedData && cachedData.length > 0) {
+      return { success: true, data: cachedData };
+    }
+
+    return {
+      success: false,
+      error: `Failed to fetch team compositions: ${(error as Error).message}`
+    };
+  }
+};
+
+// Get team compositions from cache
+const getTeamCompsFromCache = async (): Promise<TeamComp[] | null> => {
+  try {
+    const database = initDatabase();
+    const stmt = database.prepare('SELECT data FROM team_comps');
+    const rows = stmt.all();
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    return rows.map((row: any) => JSON.parse(row.data));
+  } catch (error) {
+    console.error('Error getting team comps from cache:', error);
+    return null;
+  }
+};
+
+// Cache team compositions
+const cacheTeamComps = async (teamComps: TeamComp[]): Promise<void> => {
+  try {
+    const database = initDatabase();
+    const stmt = database.prepare(
+      'INSERT OR REPLACE INTO team_comps (id, name, tier, data, updated_at) VALUES (?, ?, ?, ?, ?)'
+    );
+
+    const now = Date.now();
+
+    // Begin transaction
+    const transaction = database.transaction((comps: TeamComp[]) => {
+      for (const comp of comps) {
+        stmt.run(comp.id, comp.name, comp.tier, JSON.stringify(comp), now);
+      }
+    });
+
+    transaction(teamComps);
+  } catch (error) {
+    console.error('Error caching team comps:', error);
+  }
+};
+
+// Similar functions for items, augments, etc.
+export const fetchItems = async (): Promise<ApiResponse<Item[]>> => {
+  // Implementation similar to fetchTeamComps
+  return { success: true, data: [] };
+};
+
+export const fetchAugments = async (): Promise<ApiResponse<Augment[]>> => {
+  try {
+    // Check if we need to refresh the data
+    const lastUpdate = localStorage.getItem(STORAGE_KEYS.LAST_UPDATE);
+    const now = Date.now();
+
+    // If data is fresh (less than 24 hours old), use cached data
+    if (lastUpdate && now - parseInt(lastUpdate, 10) < 24 * 60 * 60 * 1000) {
+      const cachedData = await getAugmentsFromCache();
+      if (cachedData && cachedData.length > 0) {
+        return { success: true, data: cachedData };
+      }
+    }
+
+    // Fetch fresh data from tactics.tools API
+    // Note: This is a mock endpoint, replace with actual tactics.tools API when available
+    const response = await fetch(`${API_ENDPOINTS.TACTICS_TOOLS}/augments`);
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Transform API data to our format
+    const augments: Augment[] = data.augments.map((augment: any) => ({
+      id: augment.id || augment.name.replace(/\s+/g, '_').toLowerCase(),
+      name: augment.name,
+      description: augment.description || '',
+      tier: augment.tier || 'silver', // silver, gold, prismatic
+      synergies: augment.synergies || [],
+    }));
+
+    // Cache the data
+    await cacheAugments(augments);
+
+    // Update last update timestamp
+    localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, now.toString());
+
+    return { success: true, data: augments };
+  } catch (error) {
+    console.error('Error fetching augments:', error);
+
+    // Try to get data from cache as fallback
+    const cachedData = await getAugmentsFromCache();
+    if (cachedData && cachedData.length > 0) {
+      return { success: true, data: cachedData };
+    }
+
+    // If API fails and no cache, return mock data for development
+    return {
+      success: true,
+      data: getMockAugments()
+    };
+  }
+};
+
+// Get augments from cache
+const getAugmentsFromCache = async (): Promise<Augment[] | null> => {
+  try {
+    const database = initDatabase();
+    const stmt = database.prepare('SELECT data FROM augments');
+    const rows = stmt.all();
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    return rows.map((row: any) => JSON.parse(row.data));
+  } catch (error) {
+    console.error('Error getting augments from cache:', error);
+    return null;
+  }
+};
+
+// Cache augments
+const cacheAugments = async (augments: Augment[]): Promise<void> => {
+  try {
+    const database = initDatabase();
+    const stmt = database.prepare(
+      'INSERT OR REPLACE INTO augments (id, name, tier, data, updated_at) VALUES (?, ?, ?, ?, ?)'
+    );
+
+    const now = Date.now();
+
+    // Begin transaction
+    const transaction = database.transaction((items: Augment[]) => {
+      for (const item of items) {
+        stmt.run(item.id, item.name, item.tier, JSON.stringify(item), now);
+      }
+    });
+
+    transaction(augments);
+  } catch (error) {
+    console.error('Error caching augments:', error);
+  }
+};
+
+// Mock augments for development
+const getMockAugments = (): Augment[] => {
+  return [
+    {
+      id: 'spirit_heart',
+      name: 'Spirit Heart',
+      description: 'Your team counts as having 1 additional Spirit.',
+      tier: 'silver',
+      synergies: ['Spirit'],
+    },
+    {
+      id: 'spell_sword',
+      name: 'Spell Sword',
+      description: 'Your units gain 20% Attack Speed and 20 Ability Power.',
+      tier: 'gold',
+      synergies: ['Sorcerer', 'Duelist'],
+    },
+    {
+      id: 'sorcerer_soul',
+      name: 'Sorcerer Soul',
+      description: 'Your team counts as having 2 additional Sorcerers.',
+      tier: 'silver',
+      synergies: ['Sorcerer'],
+    },
+    {
+      id: 'built_different_3',
+      name: 'Built Different III',
+      description: 'Your units with no traits active gain 400 Health and 60% Attack Speed.',
+      tier: 'prismatic',
+      synergies: [],
+    },
+    {
+      id: 'celestial_blessing_2',
+      name: 'Celestial Blessing II',
+      description: 'Your units heal for 25% of the damage they deal.',
+      tier: 'gold',
+      synergies: [],
+    },
+    {
+      id: 'cybernetic_implants_1',
+      name: 'Cybernetic Implants I',
+      description: 'Units with at least 1 item gain 150 Health and 10 Attack Damage.',
+      tier: 'silver',
+      synergies: [],
+    },
+  ];
+};
+
+// Clean up resources
+export const cleanup = () => {
+  if (db) {
+    db.close();
+    db = null;
+  }
+};

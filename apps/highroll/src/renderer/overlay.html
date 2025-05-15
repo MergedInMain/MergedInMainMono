@@ -1,25 +1,298 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HighRoll Overlay</title>
+  <title>HighRoll TFT Overlay</title>
   <style>
     body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: transparent;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
       overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    #overlay-root {
-      width: 100%;
-      height: 100%;
+    
+    .drag-handle {
+      -webkit-app-region: drag;
+      background-color: rgba(40, 40, 40, 0.8);
+      padding: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .content {
+      flex: 1;
+      overflow: auto;
+      padding: 10px;
+    }
+    
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(100, 100, 100, 0.5);
+    }
+    
+    .tab {
+      padding: 8px 12px;
+      cursor: pointer;
+      background-color: rgba(40, 40, 40, 0.8);
+    }
+    
+    .tab.active {
+      background-color: rgba(70, 70, 70, 0.8);
+    }
+    
+    .tab-content {
+      display: none;
+      padding: 10px;
+      background-color: rgba(30, 30, 30, 0.8);
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .status-bar {
+      background-color: rgba(40, 40, 40, 0.8);
+      padding: 5px 10px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    button {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 4px;
+    }
+    
+    button:hover {
+      background-color: rgba(100, 100, 100, 0.5);
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
-  <div id="overlay-root"></div>
-  <script src="./overlay.js"></script>
+  <!-- Header/Drag Handle -->
+  <div class="drag-handle">
+    <h3 style="margin: 0; font-size: 14px;">HighRoll TFT Overlay</h3>
+    <div>
+      <button id="settingsBtn" title="Settings">⚙️</button>
+      <button id="captureBtn" title="Capture Screen">📷</button>
+      <button id="closeBtn" title="Close Overlay">✖️</button>
+    </div>
+  </div>
+  
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" data-tab="teamComp">Team Comps</div>
+      <div class="tab" data-tab="items">Items</div>
+      <div class="tab" data-tab="augments">Augments</div>
+      <div class="tab" data-tab="economy">Economy</div>
+    </div>
+    
+    <!-- Tab Contents -->
+    <div id="teamComp" class="tab-content active">
+      <p>Waiting for game data...</p>
+      <p style="font-size: 12px; color: #aaa;">Press the capture button to analyze the current game state.</p>
+    </div>
+    
+    <div id="items" class="tab-content">
+      <p>Waiting for game data...</p>
+      <p style="font-size: 12px; color: #aaa;">Press the capture button to analyze the current game state.</p>
+    </div>
+    
+    <div id="augments" class="tab-content">
+      <p>Waiting for game data...</p>
+      <p style="font-size: 12px; color: #aaa;">Press the capture button to analyze the current game state.</p>
+    </div>
+    
+    <div id="economy" class="tab-content">
+      <p>Waiting for game data...</p>
+      <p style="font-size: 12px; color: #aaa;">Press the capture button to analyze the current game state.</p>
+    </div>
+  </div>
+  
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span>Waiting for game data...</span>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Deactivate all tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Activate clicked tab
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+    
+    // Button handlers
+    document.getElementById('closeBtn').addEventListener('click', () => {
+      ipcRenderer.invoke('toggle-overlay', false);
+    });
+    
+    document.getElementById('captureBtn').addEventListener('click', async () => {
+      const result = await ipcRenderer.invoke('capture-screen');
+      if (result.success) {
+        console.log('Screen captured:', result.imagePath);
+        // In a real implementation, this would trigger game state analysis
+        updateMockGameState();
+      } else {
+        console.error('Screen capture failed:', result.error);
+      }
+    });
+    
+    // Mock game state for demonstration
+    function updateMockGameState() {
+      const mockGameState = {
+        stage: 'planning',
+        playerLevel: 7,
+        playerHealth: 80,
+        gold: 50,
+        streak: 2,
+        units: [
+          {
+            id: 'TFT9_Ahri',
+            name: 'Ahri',
+            cost: 4,
+            tier: 2,
+            items: [
+              { id: 'TFT_Item_Deathcap', name: 'Rabadon\'s Deathcap', type: 'combined' },
+            ],
+            traits: ['Spirit', 'Sorcerer'],
+          },
+        ],
+        traits: [
+          { id: 'Spirit', name: 'Spirit', count: 2, active: true, style: 'bronze' },
+          { id: 'Sorcerer', name: 'Sorcerer', count: 1, active: false, style: 'none' },
+        ],
+      };
+      
+      // Update status bar
+      document.querySelector('.status-bar').innerHTML = `
+        <span>Stage: ${mockGameState.stage}</span>
+        <span>Level: ${mockGameState.playerLevel}</span>
+        <span>Gold: ${mockGameState.gold}</span>
+        <span>Health: ${mockGameState.playerHealth}</span>
+      `;
+      
+      // Update team comp tab
+      document.getElementById('teamComp').innerHTML = `
+        <div style="background-color: rgba(40, 40, 40, 0.8); padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+          <h3 style="margin-top: 0;">Recommended Comp: Spirit Sorcerers</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
+            <span style="background-color: rgba(60, 60, 60, 0.8); padding: 3px 6px; border-radius: 4px; font-size: 12px;">Spirit 4</span>
+            <span style="background-color: rgba(60, 60, 60, 0.8); padding: 3px 6px; border-radius: 4px; font-size: 12px;">Sorcerer 4</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
+            <div style="background-color: rgba(60, 60, 60, 0.8); padding: 5px; border-radius: 4px; text-align: center;">
+              <div style="font-weight: bold; color: #9c2ea1;">Ahri</div>
+              <div style="font-size: 10px;">Spirit, Sorcerer</div>
+            </div>
+            <div style="background-color: rgba(60, 60, 60, 0.8); padding: 5px; border-radius: 4px; text-align: center;">
+              <div style="font-weight: bold; color: #2e7aa1;">Yuumi</div>
+              <div style="font-size: 10px;">Spirit, Sorcerer</div>
+            </div>
+            <div style="background-color: rgba(60, 60, 60, 0.8); padding: 5px; border-radius: 4px; text-align: center;">
+              <div style="font-weight: bold; color: #2e7aa1;">Kindred</div>
+              <div style="font-size: 10px;">Spirit, Marksman</div>
+            </div>
+            <div style="background-color: rgba(60, 60, 60, 0.8); padding: 5px; border-radius: 4px; text-align: center;">
+              <div style="font-weight: bold; color: #2ea12e;">Teemo</div>
+              <div style="font-size: 10px;">Spirit, Yordle</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Update items tab
+      document.getElementById('items').innerHTML = `
+        <div style="background-color: rgba(40, 40, 40, 0.8); padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+          <h3 style="margin-top: 0;">Recommended Items for Ahri</h3>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;">
+            <div style="background-color: rgba(60, 60, 60, 0.8); padding: 5px; border-radius: 4px; text-align: center;">
+              <div style="width: 20px; height: 20px; background-color: #9c2ea1; border-radius: 50%; margin: 0 auto;"></div>
+              <div style="font-size: 12px; margin-top: 5px;">Rabadon's Deathcap</div>
+            </div>
+            <div style="background-color: rgba(60, 60, 60, 0.8); padding: 5px; border-radius: 4px; text-align: center;">
+              <div style="width: 20px; height: 20px; background-color: #9c2ea1; border-radius: 50%; margin: 0 auto;"></div>
+              <div style="font-size: 12px; margin-top: 5px;">Jeweled Gauntlet</div>
+            </div>
+            <div style="background-color: rgba(60, 60, 60, 0.8); padding: 5px; border-radius: 4px; text-align: center;">
+              <div style="width: 20px; height: 20px; background-color: #9c2ea1; border-radius: 50%; margin: 0 auto;"></div>
+              <div style="font-size: 12px; margin-top: 5px;">Archangel's Staff</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Update augments tab
+      document.getElementById('augments').innerHTML = `
+        <div style="background-color: rgba(40, 40, 40, 0.8); padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+          <h3 style="margin-top: 0;">Recommended Augments</h3>
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="background-color: rgba(60, 60, 60, 0.8); padding: 8px; border-radius: 4px; border-left: 4px solid gold;">
+              <div style="font-weight: bold;">Spirit Heart</div>
+              <div style="font-size: 12px; color: #aaa;">Your team counts as having 1 additional Spirit.</div>
+            </div>
+            <div style="background-color: rgba(60, 60, 60, 0.8); padding: 8px; border-radius: 4px; border-left: 4px solid gold;">
+              <div style="font-weight: bold;">Spell Sword</div>
+              <div style="font-size: 12px; color: #aaa;">Your units gain 20% Attack Speed and 20 Ability Power.</div>
+            </div>
+            <div style="background-color: rgba(60, 60, 60, 0.8); padding: 8px; border-radius: 4px; border-left: 4px solid silver;">
+              <div style="font-weight: bold;">Sorcerer Soul</div>
+              <div style="font-size: 12px; color: #aaa;">Your team counts as having 2 additional Sorcerers.</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Update economy tab
+      document.getElementById('economy').innerHTML = `
+        <div style="background-color: rgba(40, 40, 40, 0.8); padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+          <h3 style="margin-top: 0;">Economy Status</h3>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin-bottom: 10px;">
+            <div style="background-color: rgba(60, 60, 60, 0.8); padding: 8px; border-radius: 4px;">
+              <div style="font-size: 12px; color: #aaa;">Gold</div>
+              <div style="font-size: 18px; font-weight: bold; color: gold;">${mockGameState.gold}</div>
+            </div>
+            <div style="background-color: rgba(60, 60, 60, 0.8); padding: 8px; border-radius: 4px;">
+              <div style="font-size: 12px; color: #aaa;">Interest</div>
+              <div style="font-size: 18px; font-weight: bold; color: #4a9eff;">+${Math.min(5, Math.floor(mockGameState.gold / 10))}</div>
+            </div>
+          </div>
+          <div style="position: relative; height: 20px; background-color: rgba(60, 60, 60, 0.8); border-radius: 10px; overflow: hidden; margin-bottom: 10px;">
+            <div style="position: absolute; top: 0; left: 0; height: 100%; width: ${(mockGameState.gold / 50) * 100}%; background-color: gold;"></div>
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+              ${mockGameState.gold < 50 ? `${50 - mockGameState.gold} gold to max interest` : 'Max interest'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Listen for game state updates from main process
+    ipcRenderer.on('game-state-updated', (_, gameState) => {
+      console.log('Game state updated:', gameState);
+      // In a real implementation, this would update the UI based on the game state
+    });
+  </script>
 </body>
 </html>

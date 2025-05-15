@@ -1,133 +1,99 @@
-# HighRoll - TFT Overlay Application
+# Highroll TFT Overlay
 
-HighRoll is a Teamfight Tactics (TFT) overlay application that provides real-time analysis and recommendations during gameplay. The overlay analyzes the player's current game state including items, units, and economy to suggest optimal team compositions based on data from reputable TFT websites.
+A TeamFight Tactics (TFT) overlay application that provides real-time analysis and recommendations during gameplay.
 
 ## Features
 
-1. **Overlay Interface**
-   - Non-intrusive overlay that displays on top of the TFT game
-   - Toggleable visibility with customizable transparency
-   - Resizable and repositionable window
-   - Minimal performance impact on game
+- Real-time game state analysis
+- Team composition recommendations
+- Item optimization suggestions
+- Augment recommendations
+- Champion positioning advice
+- Match history tracking
+- Performance analytics
 
-2. **Game State Analysis**
-   - Item inventory tracking and analysis
-   - Current units on board and bench detection
-   - Economy tracking (gold, player level, win/loss streak)
-   - Current augments and available augment choices
+## Monorepo Integration
 
-3. **Team Composition Recommendations**
-   - Suggest optimal team comps based on current units and items
-   - Display transition paths to reach recommended compositions
-   - Show win rates and placement statistics for recommended comps
-   - Prioritize recommendations based on contested units in the lobby
+This application is part of the MergedInMainMono repository and follows the monorepo architecture. It is integrated with the TFT composition scraper service, which provides up-to-date team composition data from tactics.tools.
 
-4. **Augment Analysis**
-   - Recommend augments based on current/planned team composition
-   - Show statistical performance of augments with specific comps
-   - Provide augment tier lists relevant to player's game state
+## Prerequisites
 
-5. **Item Optimization**
-   - Suggest optimal item combinations for current and planned units
-   - Display best-in-slot items for key carry champions
-   - Recommend item priority from carousel rounds
+- Node.js 18+
+- Bun 1.2.12+
+- Electron 36+
 
-## Technology Stack
+## Development
 
-- **Framework**: Electron (for cross-platform desktop app)
-- **UI**: React with TypeScript
-- **State Management**: Redux or Context API
-- **Styling**: Tailwind CSS or styled-components
-- **Game Integration**: Screen capture and image recognition (Tesseract.js or custom CV solution)
-- **Data Storage**: Local SQLite for caching composition data
+### Setup
 
-## Getting Started
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/MergedInMain/MergedInMainMono.git
+   cd MergedInMainMono
+   ```
 
-### Prerequisites
+2. Install dependencies:
+   ```bash
+   bun install
+   ```
 
-- Node.js (>= 18)
-- Bun (>= 1.2.0)
+3. Create a `.env` file based on `.env.example`:
+   ```bash
+   cp apps/highroll/.env.example apps/highroll/.env
+   ```
 
-### Development
+### Running the Application
 
-From the monorepo root:
+To run the application in development mode:
 
 ```bash
-# Install dependencies
-bun install
+# From the root of the monorepo
+bun run dev:highroll
 
-# Start the development server
-bun dev --filter=highroll
-```
-
-Or from the app directory:
-
-```bash
+# Or from the highroll directory
 cd apps/highroll
-bun dev
+bun run dev
 ```
 
-### Building
+### Building the Application
+
+To build the application:
 
 ```bash
-# From the monorepo root
-bun build --filter=highroll
+# From the root of the monorepo
+bun run build:highroll
+
+# Or from the highroll directory
+cd apps/highroll
+bun run build
 ```
 
-## Project Structure
+### Packaging the Application
 
-```
-HighRoll/
-├── src/
-│   ├── main/
-│   │   ├── main.js           # Electron main process
-│   │   ├── overlay.js        # Overlay window management
-│   │   └── ipc-handlers.js   # IPC communication handlers
-│   ├── renderer/
-│   │   ├── components/       # React components
-│   │   ├── services/
-│   │   │   ├── game-state.js # Game state detection
-│   │   │   ├── data-api.js   # Data fetching and caching
-│   │   │   └── analyzer.js   # Recommendation engine
-│   │   ├── store/            # State management
-│   │   └── index.js          # Renderer entry point
-│   └── shared/
-│       ├── constants.js      # Shared constants
-│       └── types.js          # Type definitions
-├── assets/                   # Images and icons
-├── data/                     # Local data cache
-├── tests/                    # Test suite
-└── package.json
+To package the application for distribution:
+
+```bash
+# From the highroll directory
+cd apps/highroll
+bun run package
 ```
 
-## Implementation Plan
+This will create installers for Windows, macOS, and Linux in the `release` directory.
 
-### Phase 1: Core Infrastructure (Weeks 1-2)
-- Set up Electron application framework
-- Implement basic overlay functionality
-- Create data fetching and caching systems
-- Build screen capture and image recognition modules
+## Integration with TFT Composition Scraper
 
-### Phase 2: Game State Detection (Weeks 3-4)
-- Implement unit recognition on board and bench
-- Develop item detection algorithm
-- Create economy tracking system
-- Build trait activation detection
+The Highroll app integrates with the TFT composition scraper service to provide up-to-date team composition data. The service is located in the `services/tft-composition-scraper` directory.
 
-### Phase 3: Recommendation Engine (Weeks 5-6)
-- Develop team composition recommendation algorithm
-- Implement item optimization logic
-- Create augment selection advisor
-- Build positioning recommendation system
+To run the TFT composition scraper service:
 
-### Phase 4: UI Development (Weeks 7-8)
-- Design and implement main overlay interface
-- Create interactive components for user input
-- Develop settings and configuration panels
-- Optimize UI performance and responsiveness
+```bash
+# From the root of the monorepo
+cd services/tft-composition-scraper
+bun run dev
+```
 
-### Phase 5: Testing and Optimization (Weeks 9-10)
-- Comprehensive testing across different game scenarios
-- Performance optimization for minimal game impact
-- User testing and feedback collection
-- Bug fixing and stability improvements
+The service will be available at `http://localhost:3000/api`.
+
+## License
+
+MIT

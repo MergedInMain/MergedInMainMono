@@ -1,143 +1,128 @@
-/**
- * Type definitions for the application
- */
-
-/**
- * Position interface for board positions
- */
-export interface Position {
-  row: number; // Row position (0-based)
-  col: number; // Column position (0-based)
-}
-
-/**
- * Position interface for screen coordinates
- */
-export interface ScreenPosition {
-  x: number;
-  y: number;
-}
-
-/**
- * Item interface
- */
-export interface Item {
-  id: string; // Unique identifier for the item
-  name: string; // Name of the item
-  isComponent?: boolean; // Whether the item is a component
-  components?: string[]; // Component items (if not a component)
-  description?: string; // Description of the item
-}
-
-/**
- * Champion/Unit interface
- */
-export interface Champion {
-  id: string; // Unique identifier for the champion
-  name: string; // Name of the champion
-  cost: number; // Cost of the champion (1-5)
-  stars?: number; // Star level of the champion (1-3)
-  star?: number; // Alternative property for star level
-  traits?: string[]; // Traits of the champion
-  items?: Item[]; // Items equipped on the champion
-  position?: Position; // Position of the champion on the board
-}
-
-/**
- * Economy interface
- */
-export interface Economy {
-  gold: number; // Current gold
-  level: number; // Current player level
-  xp?: number; // Current player XP
-  streak?: number; // Current win/loss streak
-  health?: number; // Current player health
-}
-
-/**
- * Augment interface
- */
-export interface Augment {
-  id: string; // Unique identifier for the augment
-  name: string; // Name of the augment
-  description?: string; // Description of the augment
-  tier: string | number; // Tier of the augment (silver, gold, prismatic) or (1, 2, 3)
-}
-
-/**
- * Game state interface
- */
+// Game state types
 export interface GameState {
-  stage?: string; // Current game stage
-  health?: number; // Current player health
-  gold?: number; // Current gold
-  level?: number; // Current player level
-  board?: Champion[]; // Units currently on the board
-  bench?: Champion[]; // Units currently on the bench
-  champions?: Champion[]; // All champions (board + bench)
-  items?: Item[]; // Items in inventory
-  economy?: Economy; // Player's economy information
-  augments?: Augment[]; // Player's current augments
-  augmentChoices?: Augment[]; // Available augment choices
-  [key: string]: unknown; // Allow additional properties
+  stage: string;
+  playerLevel: number;
+  playerHealth: number;
+  gold: number;
+  streak: number;
+  units: Unit[];
+  bench: Unit[];
+  items: Item[];
+  augments: Augment[];
+  traits: Trait[];
 }
 
-/**
- * Team composition interface
- */
+// Unit (champion) type
+export interface Unit {
+  id: string;
+  name: string;
+  cost: number;
+  tier: number; // 1, 2, or 3 stars
+  position?: { row: number; col: number }; // Position on board
+  items: Item[];
+  traits: string[];
+}
+
+// Item type
+export interface Item {
+  id: string;
+  name: string;
+  type: string; // basic, combined, special, ornn
+  components?: string[]; // For combined items
+  stats?: Record<string, number>; // Item stats
+}
+
+// Augment type
+export interface Augment {
+  id: string;
+  name: string;
+  description: string;
+  tier: string; // silver, gold, prismatic
+  synergies?: string[]; // Traits or champions this augment synergizes with
+}
+
+// Trait type
+export interface Trait {
+  id: string;
+  name: string;
+  count: number;
+  active: boolean;
+  style: string; // bronze, silver, gold, etc.
+  effects?: TraitEffect[];
+}
+
+// Trait effect type
+export interface TraitEffect {
+  minUnits: number;
+  description: string;
+}
+
+// Team composition type
 export interface TeamComp {
-  id: string; // Unique identifier for the team composition
-  name: string; // Name of the team composition
-  units: Champion[]; // Units in the team composition
-  traits: string[]; // Active traits in the team composition
-  items: Item[]; // Recommended items for the team composition
-  avgPlacement: number; // Average placement of the team composition
-  playRate: number; // Play rate of the team composition
-  winRate: number; // Win rate of the team composition
+  id: string;
+  name: string;
+  tier: string; // S, A, B, C, etc.
+  units: RecommendedUnit[];
+  traits: RecommendedTrait[];
+  augments: RecommendedAugment[];
+  items: RecommendedItem[];
+  placement: number; // Average placement
+  winRate: number;
+  playRate: number;
+  difficulty: number; // 1-5
 }
 
-/**
- * Overlay settings interface
- */
-export interface OverlaySettings {
-  opacity: number; // Opacity of the overlay (0-1)
-  position: ScreenPosition; // Position of the overlay
-  visible: boolean; // Whether the overlay is visible
-  alwaysOnTop?: boolean; // Whether the overlay is always on top
+// Recommended unit type
+export interface RecommendedUnit {
+  id: string;
+  name: string;
+  priority: number; // 1-5, with 1 being highest priority
+  items: RecommendedItem[];
+  position?: { row: number; col: number }; // Recommended position
 }
 
-/**
- * Application settings interface
- */
-export interface ApplicationSettings {
-  launchOnStartup: boolean; // Whether to launch on system startup
-  minimizeToTray: boolean; // Whether to minimize to system tray
-  checkForUpdates?: boolean; // Whether to check for updates
+// Recommended trait type
+export interface RecommendedTrait {
+  id: string;
+  name: string;
+  count: number;
+  style: string; // bronze, silver, gold, etc.
 }
 
-/**
- * Data settings interface
- */
-export interface DataSettings {
-  source: string; // Data source (metatft, tactics, combined)
-  refreshFrequency: string; // Data refresh frequency (startup, daily, manual)
-  lastRefresh?: string; // Last refresh timestamp
+// Recommended augment type
+export interface RecommendedAugment {
+  id: string;
+  name: string;
+  tier: string; // silver, gold, prismatic
+  priority: number; // 1-5, with 1 being highest priority
+  description?: string; // Augment description
+  synergies?: string[]; // Traits or champions this augment synergizes with
 }
 
-/**
- * Developer settings interface
- */
-export interface DeveloperSettings {
-  enableDevTools: boolean; // Whether to enable dev tools
-  logLevel: string; // Log level (debug, info, warn, error)
+// Recommended item type
+export interface RecommendedItem {
+  id: string;
+  name: string;
+  priority: number; // 1-5, with 1 being highest priority
+  champion?: string; // Champion to put the item on
 }
 
-/**
- * Settings interface
- */
+// Application settings type
 export interface Settings {
-  overlay: OverlaySettings; // Overlay settings
-  application: ApplicationSettings; // Application settings
-  data: DataSettings; // Data settings
-  developer?: DeveloperSettings; // Developer settings
+  overlayOpacity: number;
+  overlayPosition: { x: number; y: number };
+  overlaySize: { width: number; height: number };
+  captureInterval: number;
+  dataRefreshInterval: number;
+  hotkeys: {
+    toggleOverlay: string;
+    captureScreen: string;
+  };
+}
+
+// API response types
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
 }

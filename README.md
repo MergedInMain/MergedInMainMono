@@ -1,76 +1,107 @@
-# Turborepo starter
+# MergedInMainMono Repository
 
-This Turborepo starter is maintained by the Turborepo core team.
-
-## Using this example
-
-Run the following command:
-
-```sh
-bunx create-turbo@latest
-```
+This monorepo includes various applications and services maintained by the MergedInMain team.
 
 ## What's inside?
 
-This Turborepo includes the following packages/apps:
+This monorepo includes the following packages/apps:
 
-### Apps and Packages
+### Apps
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
+- `docs`: a [Next.js](https://nextjs.org/) app for documentation
+- `web`: a [Next.js](https://nextjs.org/) app for the main website
 - `fundmoney`: a [React Native](https://reactnative.dev/) app built with [Expo](https://expo.dev/)
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
+- `highroll`: a [Electron](https://www.electronjs.org/) app for TeamFight Tactics (TFT) overlay
+
+### Services
+
+- `tft-composition-scraper`: a service for scraping and processing TFT team composition data from tactics.tools
+
+### Packages
+
+- `@repo/ui`: a React component library shared by both `web` and `docs` applications
 - `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
 - `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
 
 Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
 
-### Utilities
+## Highroll TFT Overlay
 
-This Turborepo has some additional tools already setup for you:
+The Highroll TFT Overlay is an Electron application that provides real-time analysis and recommendations during TeamFight Tactics gameplay. It integrates with the TFT composition scraper service to provide up-to-date team composition data.
+
+### Features
+
+- Real-time game state analysis
+- Team composition recommendations
+- Item optimization suggestions
+- Augment recommendations
+- Champion positioning advice
+- Match history tracking
+- Performance analytics
+
+### Running Highroll
+
+To run the Highroll app:
+
+```bash
+# From the root of the monorepo
+bun run dev:highroll
+
+# Or from the highroll directory
+cd apps/highroll
+bun run dev
+```
+
+For more information, see the [Highroll README](./apps/highroll/README.md) and the [Highroll Integration Documentation](./docs/highroll-integration.md).
+
+## TFT Composition Scraper
+
+The TFT composition scraper is a service that scrapes and processes TFT team composition data from tactics.tools. It provides API endpoints for accessing the data.
+
+### Features
+
+- Scrapes top team compositions from tactics.tools
+- Extracts key statistics for each composition
+- Collects information about required champions, items, and traits
+- Extracts team planner codes for direct import into the TFT game client
+- Stores data in a structured JSON format
+- Exposes API endpoints to access the data
+
+### Running the TFT Composition Scraper
+
+To run the TFT composition scraper service:
+
+```bash
+# From the root of the monorepo
+cd services/tft-composition-scraper
+bun run dev
+```
+
+For more information, see the [TFT Composition Scraper README](./services/tft-composition-scraper/README.md).
+
+## Utilities
+
+This monorepo has some additional tools already setup for you:
 
 - [TypeScript](https://www.typescriptlang.org/) for static type checking
 - [ESLint](https://eslint.org/) for code linting
 - [Prettier](https://prettier.io) for code formatting
+- [Turborepo](https://turbo.build/repo) for monorepo management
 
-### Build
+## Build
 
 To build all apps and packages, run the following command:
 
-```
-cd my-turborepo
+```bash
 bun build
 ```
 
-### Develop
+## Develop
 
 To develop all apps and packages, run the following command:
 
-```
-cd my-turborepo
+```bash
 bun dev
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
 ```
 
 ## Useful Links

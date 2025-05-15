@@ -1,92 +1,69 @@
-/**
- * Application-wide constants
- */
+// Game state constants
+export const GAME_STAGES = {
+  CAROUSEL: 'carousel',
+  PLANNING: 'planning',
+  COMBAT: 'combat',
+  AUGMENT_SELECTION: 'augment_selection',
+};
 
-// IPC Channels
-export const IPC_CHANNELS = {
-  // Overlay controls
-  OVERLAY_SHOW: 'overlay:show',
-  OVERLAY_HIDE: 'overlay:hide',
-  OVERLAY_TOGGLE: 'overlay:toggle',
-  OVERLAY_SET_TRANSPARENCY: 'overlay:set-transparency',
-  OVERLAY_POSITION: 'overlay:position',
-  OVERLAY_RESIZE: 'overlay:resize',
-  OVERLAY_SET_CLICK_THROUGH: 'overlay:set-click-through',
-  OVERLAY_TOGGLE_CLICK_THROUGH: 'overlay:toggle-click-through',
-  OVERLAY_GET_CLICK_THROUGH_STATE: 'overlay:get-click-through-state',
+// Item constants
+export const ITEM_TYPES = {
+  BASIC: 'basic',
+  COMBINED: 'combined',
+  SPECIAL: 'special',
+  ORNN: 'ornn',
+};
 
-  // Screen capture
-  SCREEN_CAPTURE: 'screen:capture',
+// Champion cost tiers
+export const CHAMPION_TIERS = {
+  TIER_1: 1,
+  TIER_2: 2,
+  TIER_3: 3,
+  TIER_4: 4,
+  TIER_5: 5,
+};
 
-  // Game state
-  GAME_STATE_UPDATE: 'game:state-update',
-  GAME_STATE_UPDATED: 'game:state-updated',
+// Trait activation thresholds
+export const TRAIT_THRESHOLDS = {
+  BRONZE: 'bronze',
+  SILVER: 'silver',
+  GOLD: 'gold',
+  PLATINUM: 'platinum',
+  CHROMATIC: 'chromatic',
+};
 
-  // Settings
-  SETTINGS_GET: 'settings:get',
-  SETTINGS_SAVE: 'settings:save',
-  SETTINGS_RESET: 'settings:reset',
-  SETTINGS_SAVED: 'settings:saved',
+// API endpoints
+export const API_ENDPOINTS = {
+  META_TFT: 'https://api.metatft.com/tft',
+  TACTICS_TOOLS: 'https://api.tactics.tools/tft',
+  RIOT_GAMES: 'https://na1.api.riotgames.com/tft',
+};
 
-  // App info
-  APP_INFO: 'app:info',
-
-  // Error reporting
-  ERROR_REPORT: 'error:report',
+// Local storage keys
+export const STORAGE_KEYS = {
+  SETTINGS: 'settings',
+  CACHED_DATA: 'cached_data',
+  LAST_UPDATE: 'last_update',
 };
 
 // Default settings
 export const DEFAULT_SETTINGS = {
-  overlay: {
-    opacity: 0.8,
-    position: { x: 0, y: 0 },
-    visible: false,
-    alwaysOnTop: true,
-  },
-  application: {
-    launchOnStartup: false,
-    minimizeToTray: true,
-    checkForUpdates: true,
-  },
-  data: {
-    source: 'combined',
-    refreshFrequency: 'daily',
-  },
-  developer: {
-    enableDevTools: process.env.NODE_ENV === 'development',
-    logLevel: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
+  overlayOpacity: 0.8,
+  overlayPosition: { x: 0, y: 0 },
+  overlaySize: { width: 400, height: 600 },
+  captureInterval: 5000, // ms
+  dataRefreshInterval: 86400000, // 24 hours in ms
+  hotkeys: {
+    toggleOverlay: 'Alt+T',
+    captureScreen: 'Alt+C',
   },
 };
-
-// Application paths
-export const APP_PATHS = {
-  DATA_DIR: 'data',
-  CACHE_DIR: 'cache',
-  LOGS_DIR: 'logs',
-};
-
-// Data refresh intervals (in milliseconds)
-export const REFRESH_INTERVALS = {
-  DAILY: 24 * 60 * 60 * 1000,
-  WEEKLY: 7 * 24 * 60 * 60 * 1000,
-};
-
-// External API endpoints
-export const API_ENDPOINTS = {
-  META_TFT: 'https://api.metatft.com/tft',
-  TACTICS_TOOLS: 'https://api.tactics.tools/tft',
-  RIOT_GAMES: 'https://developer.riotgames.com/apis',
-};
-
-// Game state update frequency (in milliseconds)
-export const GAME_STATE_UPDATE_INTERVAL = 1000;
 
 // Screen capture regions
-export const SCREEN_REGIONS = {
-  BOARD: { x: 0, y: 0, width: 0, height: 0 }, // To be calibrated
-  BENCH: { x: 0, y: 0, width: 0, height: 0 }, // To be calibrated
-  ITEMS: { x: 0, y: 0, width: 0, height: 0 }, // To be calibrated
-  GOLD: { x: 0, y: 0, width: 0, height: 0 }, // To be calibrated
-  LEVEL: { x: 0, y: 0, width: 0, height: 0 }, // To be calibrated
-  AUGMENTS: { x: 0, y: 0, width: 0, height: 0 }, // To be calibrated
+export const CAPTURE_REGIONS = {
+  BOARD: { x: 0.2, y: 0.2, width: 0.6, height: 0.6 }, // Relative to screen size
+  BENCH: { x: 0.2, y: 0.8, width: 0.6, height: 0.1 },
+  GOLD: { x: 0.9, y: 0.1, width: 0.1, height: 0.1 },
+  LEVEL: { x: 0.1, y: 0.1, width: 0.1, height: 0.1 },
+  AUGMENTS: { x: 0.4, y: 0.4, width: 0.2, height: 0.2 },
 };
